@@ -117,6 +117,24 @@ router.post("/new/:post/response", (req, res)=>{
     });
 });
 
+//Changes rating for a given note
+//Also updated what students have already rated it
+router.put("/:note/rating", (req, res) =>{
+    console.log("inside rating put");
+    db.Note.findById(req.params.note, function(err, note){
+        var rating = note.rating + 1;
+        var ratedBy = note.ratedBy;
+        ratedBy.push(req.body.studentid);
+        note.set({rating: rating});
+        note.set({ratedBy: ratedBy});
+        note.save(function (err, updatedNote) {
+            if (err) return handleError(err);
+            res.send(updatedNote);
+        });
+    })
+})
+
+
 
 //get all students in a class given classroom id
 router.get("/:classroom/students", (req, res) =>{
@@ -145,9 +163,22 @@ router.get("/:unit/notes", (req, res) =>{
     .then(results =>{
         // console.log(results.notes);
         
-        var return_arr = results.notes.map(function(n){
-            return {id: n._id , title: n.title}
+        var results_arr = results.notes.map(function(n){
+            return {
+                id: n._id , 
+                title: n.title, 
+                rating: n.rating,
+                ratedBy: n.ratedBy
+            }
         });
+
+        var return_arr = results_arr.sort(function(x,y){
+            return y.rating - x.rating;
+        })
+
+
+        console.log("Notes to return:");
+        console.log(return_arr);
         res.send(return_arr);
     })
 })
@@ -246,9 +277,11 @@ router.get("/:post/responses", (req, res) =>{
   
  }); // end of '/teacherlogin/create
 
+ 
 router.post("/studentlogin/verify", (req, res)=>{
     console.log("this is the route");
     db.Classroom.find({key:req.body.classroomkey}).populate("students").then(results=>{
+        console.log("found classroom key");
         console.log(results);
         var students = results[0].students;
         console.log(students);
@@ -259,6 +292,7 @@ router.post("/studentlogin/verify", (req, res)=>{
                 console.log("found");
                 found = true;
                 currentStudent = students[i];
+                break;
             }else{
                 console.log("not found");
                 found = false;
@@ -348,15 +382,9 @@ router.post("/studentlogin/verify", (req, res)=>{
 
  //route used to verify if a user is logged in and to give front end miscellaneous info
  router.get("/getsession", (req, res)=>{
-    console.log("========================"); 
-    console.log("========================"); 
-    console.log("========================"); 
-    console.log("========================"); 
-
-    console.log(req.session); 
+    console.log(req.session);
     res.send(req.session);
  })
-
  //adding classroomKey and className to session (teacher only)
  router.post("/session/addclassroom", (req,res)=>{
      console.log(req.body);
@@ -366,6 +394,9 @@ router.post("/studentlogin/verify", (req, res)=>{
     _id:req.body._id }
      res.send(req.session);
  })
+
+ //function to create random keys
+ 
 
 
 module.exports = router;

@@ -1,5 +1,6 @@
 import React from "react";
 import TeacherNote from "./TeacherNote";
+import StudentComponent from "./StudentComponent"
 import TeacherPost from "./TeacherPost";
 const TeacherUnitMain= (props) => { 
         var data;
@@ -11,15 +12,18 @@ const TeacherUnitMain= (props) => {
                 data = null;
         }
         
+        
 
         if(props.currentChoice==="Students"){
-                data = <h1>Students</h1>
-                students = <div><input type="text" id="newStudent" onChange={props.handleInputChange} value={props.newStudent} /><button type="button" onClick={props.addStudent} className="btn btn-primary">Add student</button></div>
+
+                data = <StudentComponent userType={props.userType} students={props.students} handleInputChange={props.handleInputChange} addStudent={props.addStudent}></StudentComponent>
+                // data = <h1>Students</h1>
+                // students = <div><input type="text" id="newStudent" onChange={props.handleInputChange} value={props.newStudent} /><button type="button" onClick={props.addStudent} className="btn btn-primary">Add student</button></div>
                 title = null;
         }
         else if(props.currentChoice==="Notes"){
                 
-                data = <TeacherNote notes={props.notes} getNotes={props.getNotes} id={props.id} unitId={props.unitId} />
+                data = <TeacherNote  notes={props.notes} getNotes={props.getNotes} id={props.id} unitId={props.unitId} userType={props.userType}/>
 
         }
         else if(props.currentChoice==="Posts"){
@@ -28,25 +32,10 @@ const TeacherUnitMain= (props) => {
                         data = null;
                 }
                 else{
-                        data = <TeacherPost addResponse={props.addResponse} handleInputChange={props.handleInputChange} addPost={props.addPost} posts ={props.posts} inputvalue={props.inputvalue}></TeacherPost>
+                        data = <TeacherPost addResponse={props.addResponse} handleInputChange={props.handleInputChange} addPost={props.addPost} posts ={props.posts} inputvalue={props.inputvalue} unitId={props.unitId}></TeacherPost>
                 }
         }
-        var addStudent;
-        if(props.userType==="student"){
-                console.log("student type");
-                addStudent = "";
-        }
-        else{
-                console.log("teacehrt");
-                addStudent= ( 
-                        <div>
-                                <input type="text" id="newStudent" onChange={props.handleInputChange} value={props.newStudent} />
-                                <button type="button" onClick={props.addStudent} className="btn btn-primary">Add student</button>
-                        </div>
-                      )
-                
-        }       
-                
+      
                 
          
     
@@ -76,8 +65,6 @@ const TeacherUnitMain= (props) => {
                 {students}
 
 
-                {addStudent}
-           
 
         </div>
            
