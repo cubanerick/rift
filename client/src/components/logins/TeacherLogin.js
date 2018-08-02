@@ -18,7 +18,7 @@ class TeacherLogin extends React.Component{
                 this.props.history.push("/teacherclassselect");
             }
             else{
-                console.log("not logged in");
+                // console.log("not logged in");
             }
         })
     }
@@ -31,23 +31,30 @@ class TeacherLogin extends React.Component{
     }
     //function to create a user
     createUser = () => {
-        console.log(this.state);
+        // console.log(this.state);
         if(this.state.username==="" || this.state.password==="" ){
             alert("Fill all fields!");
         }
         else{
             // console.log("Sending data to create");
-            axios.post("/teacherlogin/create", {
-                username: this.state.username,
-                password: this.state.password
-            }).then((sessionData)=>{
-                // console.log("data sent to backend!");
-                // console.log(sessionData);
-                this.props.history.push("/teacherclassselect");
-            }).catch((err) =>{
-                console.log(err);
-                alert("Username already exists!");
-            });
+            if(this.state.password.length<6){
+                alert("Password needs to be at least 6 characters!");
+            }
+            else{
+                axios.post("/teacherlogin/create", {
+                    username: this.state.username,
+                    password: this.state.password
+                }).then((sessionData)=>{
+                    // console.log("data sent to backend!");
+                    // console.log(sessionData);
+                    this.props.history.push("/teacherclassselect");
+                }).catch((err) =>{
+                    console.log(err);
+                    alert("Username already exists!");
+                });
+
+            }
+          
     
            
 
@@ -82,25 +89,37 @@ class TeacherLogin extends React.Component{
 
     render(){
         return (
-            <div className="login">
-                <h1 className="loginheader">Teacher Login</h1>
-                <form>
-                    <div className="form-group">
-                        <label htmlFor="username">Enter Username</label>
-                        <input type="text" className="form-control" id="username" placeholder="Enter Username" 
-                        onChange={this.handleInputChange}
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label htmlFor="password">Enter Password</label>
-                        <input type="password" className="form-control" id="password" placeholder="Enter Password" 
-                        onChange={this.handleInputChange}
-                        />
-                    </div>
-                    <button type="button" onClick={this.createUser} className="btn btn-primary" id="createlogin">Create</button>
+            <div className='Wrapper1'>
+            <div className="logoContainer row">
+                <img className='logo' src="https://png.icons8.com/material/50/ffffff/jet-engine.png"/>
+                <h2 className='logotitle'>Rift</h2>
+            </div>
+            <div className='row'>
+                <div className="col-md-2"></div>
+                <div className="col-md-8">
+                    <div className="login">
+                        <h3 className="loginheader">Teacher Login</h3>
+                        <form>
+                            <div className="form-group">
+                                <label htmlFor="username">Enter Username</label>
+                                <input type="text" className="form-control" id="username" placeholder="Enter Username" 
+                                onChange={this.handleInputChange}
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label htmlFor="password">Enter Password</label>
+                                <input type="password" className="form-control" id="password" placeholder="Enter Password" 
+                                onChange={this.handleInputChange}
+                                />
+                            </div>
+                            <button type="button" onClick={this.createUser} className="btn gradbtn btn-dark" id="createlogin">Create</button>
 
-                    <button type="button" onClick={this.verifyUser} className="btn btn-primary" id="teacherlogin">Login</button>
-                </form>
+                            <button type="button" onClick={this.verifyUser} className="btn gradbtn btn-dark" id="teacherlogin">Login</button>
+                        </form>
+                    </div>
+                    </div>
+                <div className="col-md-2"></div>
+            </div>
             </div>
         )
     };
