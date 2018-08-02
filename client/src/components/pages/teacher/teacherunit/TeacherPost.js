@@ -1,17 +1,30 @@
 import React from "react";
-import Dashboard from "./modal/Dashboard";
+// import Dashboard from "./modal/Dashboard";
+import Modal from "./modal/Modal";
 
+//Show posts and responses
 const TeacherPost = (props) => {
+    var posts = props.posts
     return (<div>
-            <Dashboard unitId={props.unitId} />
-            {props.posts.map(item=>
+            <Modal
+            handleClose={props.hideModal}
+            show={props.show} 
+            currentUnitName={props.currentUnitName} 
+            updateDisplay={props.updateDisplay} 
+            unitId={props.unitId} 
+            handleSubmit={props.handleSubmit}
+            handleInputChange={props.handleInputChange}
+            title={props.posttitle}
+            body={props.postbody}/>
+              <button className='btn btn-dark' type='button' onClick={props.showModal}>Add Post</button>
+            {posts.map(item=>
                 (
-                <div className='container'>
+                <div className='post_wrapper'>
                     <div className='row'>
                         <div className='col-md-12'>
                             <div className ="card postCard" key={item._id}>
                                 <div className="card-header">
-                                    <h4 className ="card-title">{item.title}</h4>
+                                    <h4 className =" post-card-title card-title">{item.title}</h4>
                                 </div>
                                 <div className ='card-body'>
                                     <div className ="card-text">{item.data}</div>
@@ -24,7 +37,7 @@ const TeacherPost = (props) => {
                                     </ul>
                                    
                                     <input type="text" onChange={props.handleInputChange} id="newResponse" />
-                                    <button className='btn btn-dark' type="button"  onClick={()=>props.addResponse(item._id)}>Add Response</button>
+                                    <button className='btn btn-dark btn-block' type="button"  onClick={()=>props.addResponse(item._id)}>Add Response</button>
                                 
                             </div>
                         </div>

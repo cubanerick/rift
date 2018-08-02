@@ -10,7 +10,10 @@ class TeacherHomePage extends React.Component {
 
 
     state = {
-        students:[],
+        show: false, //modal show   
+        posttitle: "", //title of new post 
+        postbody: "", //body of neew post 
+        students:[], //array of stidents in the classroom
         studentEmailInput:"",//track of student email similar to newStudent
         userType:"", //user type determines if info 
         newResponse:"", //field used to add a new response
@@ -34,6 +37,39 @@ class TeacherHomePage extends React.Component {
         currentChoice: "Posts"
     }
 
+    showModal = () => {
+        this.setState({ show: true });
+    }
+
+    hideModal = () => {
+        this.setState({ 
+            show: false,
+            postbody: "",
+            posttitle: "",
+            
+        });
+       
+    }
+
+    handleSubmit = () => {
+        if(this.state.postbody==="" || this.state.posttitle===""){
+            alert("Please fill all fields!");
+        }
+        else{
+              var dataObj = {
+            title: this.state.posttitle,
+            data: this.state.postbody
+        }
+        axios.post(`/new/${this.state.currentUnit}/post`, dataObj)
+        this.updateDisplay(this.state.currentUnit);
+        this.hideModal();
+
+        }
+      
+      
+        
+    }
+
     
     handleInputChange = (event) => {
         this.setState({
@@ -41,6 +77,7 @@ class TeacherHomePage extends React.Component {
         });
       
     }
+
     //get request to retrieve session data 
     componentDidMount(){
         axios.get("/getsession").then(res=>{
@@ -52,14 +89,25 @@ class TeacherHomePage extends React.Component {
                 // console.log(res.data.userType);
                 this.setState({
                     userType:res.data.userType,
-                    username: res.data.user.username,
+                    username: res.data.user.username ||res.data.user.name,
                     teacherid: res.data.user._id, 
                     key: res.data.classroomInfo.classKey,
                      classroomId:res.data.classroomInfo._id,
                      classroomName:res.data.classroomInfo.className});
                 this.getUnits(res.data.classroomInfo._id)
-                this.getNotes(this.currentUnit)
+                // this.getNotes(this.currentUnit)
                 this.getStudents(res.data.classroomInfo._id);
+                if(res.data.currentWindow!==undefined){
+                    console.log("current window found!");
+                    this.setState({
+                        currentUnitName: res.data.currentWindow.unitName,
+                        currentUnit:res.data.currentWindow.unit, 
+                        currentChoice:res.data.currentWindow.currentChoice
+                    });
+                    this.selectUnit(res.data.currentWindow.unit, res.data.currentWindow.unitName);
+                    this.infoChoice(res.data.currentWindow.currentChoice);
+
+                }
                
               }
             //   redirect if user is not logged in
@@ -74,6 +122,23 @@ class TeacherHomePage extends React.Component {
            this.props.history.push("/");
         });
     }
+
+    //function adds current view to session so refresh doesnt change it
+    setCurrentView = (id, name, choice )=>{
+        // console.log("setting current view");
+        axios.post(`/session/currentview`,
+         {
+          currentUnitName: name,
+          currentUnit: id, 
+          currentChoice: choice
+        }).then(res=>{
+            // console.log("all good? check res below");
+            // console.log(res);
+        }).catch(err=>{
+            console.log("ERROR: ");
+            console.log(err);
+        });
+    }
    
    
     //click on unit sidebar to see its info and set current currentUnitId and currentUnitName
@@ -83,6 +148,7 @@ class TeacherHomePage extends React.Component {
         this.setState({currentUnit:id, currentUnitName: name});
         this.getNotes(id);
         this.getPosts(id);
+        this.setCurrentView(id, name, this.state.currentChoice);
         
     
     }
@@ -107,7 +173,7 @@ class TeacherHomePage extends React.Component {
     //will show posts for current unit given current UnitID
     getPosts=(id)=>{
         axios.get(`/${id}/posts`).then(res=>{
-            this.setState({posts:res.data});
+            this.setState({posts:res.data.reverse()});
             // console.log("these are all the posts with populated responses: ");
             // console.log(this.state.posts);
         });
@@ -117,7 +183,7 @@ class TeacherHomePage extends React.Component {
         // console.log("Getting notes");
         axios.get(`/${id}/notes`).then(res=>{
 
-            console.log(res);
+            // console.log(res);
             this.setState({notes:res.data});
         })
     }
@@ -162,10 +228,10 @@ class TeacherHomePage extends React.Component {
             axios.post(`/new/${this.state.classroomId}/student`, {
             name:this.state.newStudent,
             //token created in the front instead of backend, shouldnt really make a difference
-             token: `t${Math.random()}`,
-             email: this.state.studentEmailInput,
-             //should teacher make a key or be randomly be assigned, should it even be made in the front? 
-             key: this.makeToken(6)
+            token: `t${Math.random()}`,
+            email: this.state.studentEmailInput,
+            //should teacher make a key or be randomly be assigned, should it even be made in the front? 
+            key: this.makeToken(6)
              
             }).then(res=>{
                 console.log("add was probably successful, check response to be sure:");
@@ -210,51 +276,48 @@ class TeacherHomePage extends React.Component {
 
     }
     //will update display after a post or a response have been made
-    updateDisplay(){
+    updateDisplay(id){
+        // this.selectUnit(this.state.currentUnit, this.state.currentUnitName);
         console.log("display updated");
         //refreshing unit to show updated information
-        this.selectUnit(this.state.currentUnit, this.state.currentUnitName);
+        this.selectUnit(id, this.state.currentUnitName);
 
     }
 
-    //add a new note
-    addNote(){
-        console.log(this.state.newNote);
 
-    }
-
-    //add a new post
-    addPost =() =>{
-        if(this.state.newPost===""){
-            alert("Please write a post before submitting!");
-        }
-        else{
-            console.log("add post");
-            console.log(this.state.newPost);
-            axios.post(`/new/${this.state.currentUnit}/post`,{data: this.state.newPost}).then(res=>{
-                console.log("note added");
-                this.updateDisplay();
+    // //add a new post
+    // addPost =() =>{
+    //     if(this.state.newPost===""){
+    //         alert("Please write a post before submitting!");
+    //     }
+    //     else{
+    //         console.log("add post");
+    //         console.log(this.state.newPost);
+    //         axios.post(`/new/${this.state.currentUnit}/post`,{data: this.state.newPost}).then(res=>{
+    //             console.log("note added");
+    //             this.updateDisplay(this.state.currentUnit);
                 
-                this.setState({
-                    newPost: ""
-                })
-            }).catch(err=>{
-                console.log(err);
-            });
+    //             this.setState({
+    //                 newPost: ""
+    //             })
+    //         }).catch(err=>{
+    //             console.log(err);
+    //         });
 
-        }
+    //     }
        
-    }
+    // }
+
     //add a new response
     addResponse = (id)=>{
         if(this.state.newResponse===""){
             alert("Please write a response before submitting!");
         }
         else{
-            console.log(this.state.newResponse)
+            // console.log(this.state.newResponse)
             axios.post(`new/${id}/response`,{data:this.state.newResponse}).then(res=>{
                 console.log("response added");
-                this.updateDisplay();
+                this.updateDisplay(this.state.currentUnit);
             }).catch(err=>{
                 console.log(err);
             })
@@ -278,6 +341,7 @@ class TeacherHomePage extends React.Component {
     infoChoice = (choice)=>{
         // console.log(choice);
         this.setState({currentChoice: choice});
+        this.setCurrentView(this.state.currentUnit, this.state.currentUnitName,choice )
         
     }
 
@@ -293,6 +357,7 @@ class TeacherHomePage extends React.Component {
                 students={this.state.students}
                 userType= {this.state.userType}
                 currentChoice = {this.state.currentChoice}
+                classroomName = {this.state.classroomName}
                 infoChoice={this.infoChoice} 
                 logout={this.logout}
                 options={this.state.mainOptions} 
@@ -310,7 +375,13 @@ class TeacherHomePage extends React.Component {
                 getNotes={this.getNotes}
                 inputvalue={this.state.newPost}
                 newStudent={this.state.newStudent}
-                
+                updateDisplay={this.updateDisplay}
+                show={this.state.show}
+                posttitle={this.state.posttitle}
+                postbody={this.state.postbody}
+                showModal={this.showModal}
+                hideModal={this.hideModal}
+                handleSubmit={this.handleSubmit}
                 />
         
                

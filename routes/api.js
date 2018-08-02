@@ -1,5 +1,7 @@
 const router = require("express").Router();
 var db = require("../models");
+// const nodemailer = require("nodemailer");
+
 
 
 //Add new teacher
@@ -230,24 +232,11 @@ router.get("/:post/responses", (req, res) =>{
 
  //route for creating a new teacher user
  router.post("/teacherlogin/create", (req,res)=>{
-    console.log("Creating user");
-    db.Teacher.find().then((results)=>{
-      var users = results;    
-       //determining whether the input is unique
-       var newUser = true;
-         for (var i = 0; i<users.length;i++){
-           if(users[i].username === req.body.username){
-             newUser = false;
-           
-           }
-           else{
-             newUser = true;
-           }
-         }
-        if(newUser===true){
+    // console.log("Creating user");
+  
         //creation of token for cookies
         var userToken = "t" + Math.random();
-        // var encryptedPassword = encrypt.encrypt(req.body.password);
+    //     // var encryptedPassword = encrypt.encrypt(req.body.password);
         var newUser ={
             username: req.body.username,
             password: req.body.password,
@@ -261,30 +250,23 @@ router.get("/:post/responses", (req, res) =>{
                     req.session.userType= "teacher";
                     req.session.user = results;
                     res.send(req.session);
+                }).catch(err=>{
+                    // console.log(err);
+                    return res.status(401).end();
                 });
-        }else{
-        console.log("User already exists");
-           return res.status(401).end();
-           res.end();
-        
-        }
- 
-    });
-   
-
-
-
+         
+       
   
  }); // end of '/teacherlogin/create
 
  
 router.post("/studentlogin/verify", (req, res)=>{
-    console.log("this is the route");
+    // console.log("this is the route");
     db.Classroom.find({key:req.body.classroomkey}).populate("students").then(results=>{
-        console.log("found classroom key");
-        console.log(results);
+        // console.log("found classroom key");
+        // console.log(results);
         var students = results[0].students;
-        console.log(students);
+        // console.log(students);
         var found = false;
         var currentStudent;
         for (var i = 0; i<students.length;i++){
@@ -299,7 +281,7 @@ router.post("/studentlogin/verify", (req, res)=>{
             }
         }
         if(found ===true){
-            console.log("all good");
+            console.log("student has been found");
             res.cookie("token", currentStudent.token );
             req.session.userType="student";
             req.session.classroomInfo = {
@@ -310,7 +292,7 @@ router.post("/studentlogin/verify", (req, res)=>{
 
             // req.session.classroom = results[0]._id;
             req.session.user= currentStudent;
-            console.log("this is fine");
+            // console.log("this is fine");
             res.send(req.session);
         }
         else{
@@ -318,7 +300,7 @@ router.post("/studentlogin/verify", (req, res)=>{
         }
        
     }).catch(err=>{
-        console.log("==================")
+        // console.log("==================")
         console.log(err);
         return res.status(404).end();
         
@@ -326,13 +308,12 @@ router.post("/studentlogin/verify", (req, res)=>{
 
 });
 
-
 //route created to verify if teacher user already exists 
  router.post("/teacherlogin/verify", (req,res)=>{
-     console.log("sent data"); 
-     console.log(req.body);
+    //  console.log("sent data"); 
+    //  console.log(req.body);
     db.Teacher.find().then(results=>{
-        console.log(results);
+        // console.log(results);
         var users = results;
         var loopCheck = false;
         //loop to verify correct username and password
@@ -352,7 +333,7 @@ router.post("/studentlogin/verify", (req, res)=>{
                 //     token: req.body.token
                 // }
                 var currentUser = users[i];
-                console.log(currentUser);
+                // console.log(currentUser);
                 res.cookie("token", users[i].token);
                 console.log("user found");
                 loopCheck = true;
@@ -382,21 +363,32 @@ router.post("/studentlogin/verify", (req, res)=>{
 
  //route used to verify if a user is logged in and to give front end miscellaneous info
  router.get("/getsession", (req, res)=>{
-    console.log(req.session);
+    // console.log(req.session);
     res.send(req.session);
- })
+ });
+
  //adding classroomKey and className to session (teacher only)
  router.post("/session/addclassroom", (req,res)=>{
-     console.log(req.body);
+    //  console.log(req.body);
      req.session.classroomInfo = {
     className: req.body.className, 
     classKey: req.body.classKey,
     _id:req.body._id }
      res.send(req.session);
- })
+ });
 
- //function to create random keys
- 
+ //route to keep you on the current page you're on
+ router.post("/session/currentview", (req, res)=>{
+    //  console.log(req.body);
+     //adds current window view to session so that it remains there if the pag
+     req.session.currentWindow = {
+         unitName: req.body.currentUnitName,
+         unit: req.body.currentUnit,
+         currentChoice: req.body.currentChoice
+     }
+     res.send(req.session);
+
+ });
 
 
 module.exports = router;

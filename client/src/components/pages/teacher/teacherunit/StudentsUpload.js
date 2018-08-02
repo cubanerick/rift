@@ -1,7 +1,7 @@
 import React from 'react'
 import axios, { post } from 'axios';
 
-class Upload extends React.Component {
+class StudentsUpload extends React.Component {
 
   constructor(props) {
     super(props);
@@ -16,6 +16,7 @@ class Upload extends React.Component {
     e.preventDefault() // Stop form submit
     this.fileUpload(this.state.file).then((response)=>{
       console.log(response.data);
+      this.props.getStudents(this.props.classroomId);
     })
   }
   onChange(e) {
@@ -23,7 +24,8 @@ class Upload extends React.Component {
    
   }
   fileUpload(file){
-    const url = `/new/${this.props.unitId}/note`;
+    console.log(this.props.classroomId)
+    const url = "/studentsfile/" + this.props.classroomId;
     const formData = new FormData();
     formData.append('file',file)
     const config = {
@@ -31,10 +33,7 @@ class Upload extends React.Component {
             'content-type': 'multipart/form-data'
         }
     }
-    alert("file has been uploaded!");
-    this.setState({file: null})
     return  post(url, formData,config)
-    
   }
 
   render()
@@ -42,21 +41,19 @@ class Upload extends React.Component {
     var button = ""
 
     if(this.state.file!==null){
-     button=  <button className='btn btn-dark' type="submit">Upload</button>
+     button=  <button type="submit">Upload</button>
 
     }
     return (
-      
       <form onSubmit={this.onFormSubmit}>
-          <input  className='' type="file" onChange={this.onChange} />
-          {button}
+        <h3>File Upload</h3>
+        <input type="file" onChange={this.onChange} />
+        {button}
       </form>
-      
-
    )
   }
 }
 
 
 
-export default Upload;
+export default StudentsUpload;
